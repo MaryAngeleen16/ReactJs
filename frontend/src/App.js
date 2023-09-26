@@ -1,63 +1,65 @@
-import logo from './logo.svg';
+import { useEffect, useState } from 'react';
+import axios from 'axios'
+
+
 import './App.css';
-import Footer from './Footer';
-import React, { useEffect, useState } from "react";
+
+
 import Nav from './Nav';
-import axios from 'axios';
+import Footer from './Footer'
 
-function App() {
-  const [posts, setPosts] = useState([]);
 
-  useEffect(() => {
-    const fetchPosts = () => {
+const App = () => {
+  const [posts, setPosts] = useState([])
+
+  const fetchPosts = () => {
+    axios.get('http://127.0.0.1:8000/api/posts')
+      .then(res => {
+
+        setPosts(res.data.posts)
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }
+
+  useEffect(() => { fetchPosts(); }, [])
+
+  const handleDelete = e => {
+    const id = e.target.getAttribute('data-id')
+    if (window.confirm('Are you sure you want to DELETE this post?')) {
+      alert('Yes')
       axios
-        .get('http://localhost:8000/api/posts')
-        .then(response => {
-          // Check if the response data is an array
-          if (Array.isArray(response.data)) {
-            setPosts(response.data);
-          } else {
-            // Handle the case where the response data is not an array
-            console.error('Received non-array data from the API.');
-          }
+        .delete(`http://localhost:8000/api/post/${id}`, {
         })
-        .catch(error => {
-          console.error('Error fetching data:', error);
-        });
-    };
+        .then((res) => {
+          console.log(res);
+          fetchPosts();
+        })
+        .catch((err) => {
+          console.log(err);
 
-    fetchPosts();
-  }, []);
+        })
+
+    }
+  }
 
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-
-        <div className="App">
-          <Nav />
-          {posts.map((post, i) => (
-            <div key={i}>
-              <h2>{post.title}</h2>
-              <p>{post.slug}</p>
-              <p>{post.content}</p>
+    <div className="App" >
+      <Nav />
+      <div className='container p-xxl-5 p-sm-5'>      
+        {posts.map((post) => (
+          <div key={post.id} style={{ marginBottom: "50px" }}>
+            <h3>{post.title}</h3>
+            <p>{post.content}</p>
+            <div style={{ display: "flex", justifyContent: "center" }}>
+              <button className='btn btn-outline-primary' style={{ marginRight: "10px" }} >Edit</button>
+              <button data-id={post.id} onClick={handleDelete} className='btn btn-outline-danger'>Delete</button>
             </div>
-          ))}
-        </div>
-
-        <Footer />
-      </header>
+          </div>
+        ))}
+      </div>
+      <Footer />
     </div>
   );
 }
